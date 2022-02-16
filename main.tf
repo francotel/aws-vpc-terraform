@@ -39,8 +39,37 @@ resource "aws_default_security_group" "default" {
   )
 }
 
+## AWS VPC modify SG custom for PCI
+resource "aws_security_group" "sg_vpc_custom" {
+  name        = "vpc-sg-custom-tf"
+  description = "security group for vpc custom"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    #ipv6_cidr_blocks = ["::/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    #ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "vpc-sg-custom-tf"
+  }
+}
+
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = aws_vpc.main.default_network_acl_id
+  subnet_ids = flatten([
+      aws_subnet.private.*.id,
+      aws_subnet.public.*.id])
 
   ingress {
     protocol   = -1
